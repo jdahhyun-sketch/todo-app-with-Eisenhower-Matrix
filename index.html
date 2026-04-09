@@ -2298,12 +2298,11 @@
   }
 
   /** 폴더 색 = 카드 목록을 감싸는 .column 패널 전체 면 (배경색과 믹스, 폴더 투명도로 섞기 비율 조절) */
-  function applyColumnPanelBackground(columnEl, col) {
-    var folderHex = getColumnFolderHex(col.id);
-    var fA = clamp01(userColors.folderAlpha);
-    columnEl.style.background = mixHexColors(UI_CHROME_BG, folderHex, 0.26 * fA);
-  }
-
+ function applyColumnPanelBackground(columnEl, col) {
+  var folderHex = getColumnFolderHex(col.id);
+  var fA = clamp01(userColors.folderAlpha);
+  columnEl.style.background = hexToRgba(folderHex, fA);
+}
   function loadState() {
     var localCardMeta = {};
     try {
