@@ -1717,11 +1717,16 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script>
-(function () {
+(async function () {
   "use strict";
 
   var STORAGE_KEY = "dashboard-todo-kanban-v1";
+  var SUPABASE_URL = "https://rioukoqxgdwwxyuooeap.supabase.co/todos";
+  var SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpb3Vrb3F4Z2R3d3h5dW9vZWFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NTkxNjcsImV4cCI6MjA5MTIzNTE2N30.H4HBeyMkVf6fNLDJo62Nj7c-l30LC8GYiD0x4FztYRc"
+  var supabaseClient = null;
+  window.supabaseClient = null;
   var DEFAULT_COLUMN_COLOR = "#9b9a97";
   var DEFAULT_FOLDER_BORDER_KEY = "dashboard-todo-default-folder-border-v1";
   var DEFAULT_FOLDER_FILL_KEY = "dashboard-todo-default-folder-fill-v1";
@@ -2300,26 +2305,89 @@
   }
 
   function loadState() {
+    var localCardMeta = {};
     try {
       var raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) {
         state = defaultState();
-        return;
+      } else {
+        var data = JSON.parse(raw);
+        if (!data.columns) {
+          state = defaultState();
+        } else {
+          state.columns = data.columns;
+          migrateColumns(state.columns);
+          state.nextColumnId = data.nextColumnId || 1;
+          state.nextCardId = data.nextCardId || 1;
+          localCardMeta = data.cards || {};
+        }
       }
-      var data = JSON.parse(raw);
-      if (!data.columns || !data.cards) {
-        state = defaultState();
-        return;
-      }
-      state.columns = data.columns;
-      migrateColumns(state.columns);
-      state.cards = data.cards;
-      state.nextColumnId = data.nextColumnId || 1;
-      state.nextCardId = data.nextCardId || 1;
-      migrateCards(state.cards);
     } catch (e) {
       state = defaultState();
     }
+
+    if (!supabaseClient) {
+      state.cards = {};
+      state.columns.forEach(function (col) {
+        col.cardIds = [];
+      });
+      return Promise.resolve();
+    }
+
+    return supabaseClient
+      .from("todos")
+      .select("id,title,deadline,importance,urgency")
+      .order("created_at", { ascending: true })
+      .then(function (res) {
+        if (res.error) {
+          console.error("Supabase load failed:", res.error.message);
+          return;
+        }
+        var rows = Array.isArray(res.data) ? res.data : [];
+        var cards = {};
+        rows.forEach(function (row) {
+          var id = String(row.id || "").trim();
+          if (!id) return;
+          cards[id] = {
+            id: id,
+            title: row.title || "",
+            deadline: isoToDateInput(row.deadline),
+            urgency: roundScore1(row.urgency),
+            urgencyAuto: false,
+            importance: roundScore1(row.importance),
+            columnId: (localCardMeta[id] && localCardMeta[id].columnId) || state.columns[0].id
+          };
+        });
+        state.cards = cards;
+
+        var allIds = Object.keys(cards);
+        var idSet = {};
+        allIds.forEach(function (id) {
+          idSet[id] = true;
+        });
+        state.columns.forEach(function (col) {
+          var src = Array.isArray(col.cardIds) ? col.cardIds : [];
+          col.cardIds = src.filter(function (id) {
+            return !!idSet[id] && cards[id] && cards[id].columnId === col.id;
+          });
+        });
+        allIds.forEach(function (id) {
+          var card = cards[id];
+          var col = getColumnById(card.columnId) || state.columns[0];
+          if (!col) return;
+          if (col.cardIds.indexOf(id) === -1) col.cardIds.push(id);
+          card.columnId = col.id;
+        });
+
+        var maxNum = 0;
+        allIds.forEach(function (id) {
+          var m = /card-(\d+)$/.exec(id);
+          if (!m) return;
+          var n = parseInt(m[1], 10);
+          if (!isNaN(n) && n > maxNum) maxNum = n;
+        });
+        state.nextCardId = Math.max(state.nextCardId || 1, maxNum + 1);
+      });
   }
 
   function defaultState() {
@@ -2339,6 +2407,48 @@
     };
   }
 
+  function dateInputToIso(dateStr) {
+    if (!dateStr) return null;
+    var d = new Date(dateStr + "T12:00:00");
+    if (isNaN(d.getTime())) return null;
+    return d.toISOString();
+  }
+
+  function isoToDateInput(isoStr) {
+    if (!isoStr) return null;
+    var d = new Date(isoStr);
+    if (isNaN(d.getTime())) return null;
+    var y = d.getFullYear();
+    var m = ("0" + (d.getMonth() + 1)).slice(-2);
+    var day = ("0" + d.getDate()).slice(-2);
+    return y + "-" + m + "-" + day;
+  }
+
+  function persistTodosToSupabase() {
+    if (!supabaseClient) return Promise.resolve();
+    var rows = Object.keys(state.cards).map(function (id) {
+      var c = state.cards[id];
+      return {
+        id: c.id,
+        title: c.title,
+        deadline: dateInputToIso(c.deadline),
+        urgency: roundScore1(c.urgency),
+        importance: roundScore1(c.importance)
+      };
+    });
+    if (!rows.length) return Promise.resolve();
+    return supabaseClient.from("todos").upsert(rows, { onConflict: "id" }).then(function (res) {
+      if (res.error) console.error("Supabase upsert failed:", res.error.message);
+    });
+  }
+
+  function deleteTodoFromSupabase(cardId) {
+    if (!supabaseClient) return Promise.resolve();
+    return supabaseClient.from("todos").delete().eq("id", cardId).then(function (res) {
+      if (res.error) console.error("Supabase delete failed:", res.error.message);
+    });
+  }
+
   function saveState() {
     localStorage.setItem(
       STORAGE_KEY,
@@ -2349,6 +2459,52 @@
         nextCardId: state.nextCardId
       })
     );
+    persistTodosToSupabase();
+  }
+
+  function getSupabaseCreateClient() {
+    var ns = typeof window !== "undefined" ? window.supabase : null;
+    if (ns && typeof ns.createClient === "function") return ns.createClient.bind(ns);
+    return null;
+  }
+
+  function initSupabaseClient() {
+    console.info("[Supabase] init started");
+    return Promise.resolve()
+      .then(function () {
+        var createClient = getSupabaseCreateClient();
+        if (!createClient) {
+          throw new Error(
+            "Supabase SDK가 로드되지 않았습니다. 네트워크·CDN 차단을 확인하거나 script src를 확인하세요."
+          );
+        }
+        if (!supabaseCredentialsOk()) {
+          throw new Error("SUPABASE_URL/SUPABASE_KEY 값을 코드에 입력해 주세요.");
+        }
+        supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+        window.supabaseClient = supabaseClient;
+        return supabaseClient.from("todos").select("id", { count: "exact", head: true });
+      })
+      .then(function (res) {
+        if (res && res.error) {
+          throw new Error(res.error.message || "Supabase 연결 확인 쿼리에 실패했습니다.");
+        }
+        console.info("[Supabase] init success");
+        return true;
+      })
+      .catch(function (err) {
+        supabaseClient = null;
+        window.supabaseClient = null;
+        console.error("[Supabase] init failed:", err && err.message ? err.message : err);
+        alert("Supabase 연결에 실패했습니다. URL/KEY 값 및 테이블/RLS 설정을 확인해 주세요.");
+        return false;
+      });
+  }
+
+  function supabaseCredentialsOk() {
+    var url = String(SUPABASE_URL || "").trim();
+    var key = String(SUPABASE_KEY || "").trim();
+    return url.length > 0 && key.length > 0;
   }
 
   function getCard(id) {
@@ -2723,6 +2879,7 @@
       });
     });
     saveState();
+    deleteTodoFromSupabase(cardId);
     renderBoard();
     renderMatrix();
   }
@@ -3456,7 +3613,9 @@
     });
   });
 
-  loadState();
+  var supabaseReady = await initSupabaseClient();
+  console.info("[App] Supabase ready:", !!supabaseReady);
+  await loadState();
   renderBoard();
   renderMatrix();
 })();
