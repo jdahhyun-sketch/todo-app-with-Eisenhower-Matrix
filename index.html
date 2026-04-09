@@ -250,7 +250,7 @@
 
     .column {
       flex: 0 0 280px;
-      background: var(--surface);
+      background: transparent;
       border: 1px solid var(--border);
       /* 실제 면색은 renderColumn에서 폴더 색으로 덮어씀 */
       border-radius: var(--radius);
@@ -1723,7 +1723,7 @@
   "use strict";
 
   var STORAGE_KEY = "dashboard-todo-kanban-v1";
-  var SUPABASE_URL = "https://rioukoqxgdwwxyuooeap.supabase.co/";
+  var SUPABASE_URL = "https://rioukoqxgdwwxyuooeap.supabase.co/todos";
   var SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpb3Vrb3F4Z2R3d3h5dW9vZWFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NTkxNjcsImV4cCI6MjA5MTIzNTE2N30.H4HBeyMkVf6fNLDJo62Nj7c-l30LC8GYiD0x4FztYRc"
   var supabaseClient = null;
   window.supabaseClient = null;
@@ -2297,12 +2297,13 @@
     headEl.style.background = "transparent";
   }
 
-  /** 폴더 색 = 카드 목록을 감싸는 .column 패널 전체 면 (배경색과 믹스, 폴더 투명도로 섞기 비율 조절) */
- function applyColumnPanelBackground(columnEl, col) {
-  var folderHex = getColumnFolderHex(col.id);
-  var fA = clamp01(userColors.folderAlpha);
-  columnEl.style.background = hexToRgba(folderHex, fA);
-}
+  /** 폴더 색 = 카드 목록을 감싸는 .column 패널 전체 면 (알파로 실제 투명도 적용) */
+  function applyColumnPanelBackground(columnEl, col) {
+    var folderHex = getColumnFolderHex(col.id);
+    var fA = clamp01(userColors.folderAlpha);
+    columnEl.style.background = hexToRgba(folderHex, fA);
+  }
+
   function loadState() {
     var localCardMeta = {};
     try {
