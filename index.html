@@ -249,14 +249,14 @@
     }
 
     .column {
-      flex: 0 0 280px;
+      flex: 0 0 auto;
+      min-width: 280px;
       background: transparent;
       border: 1px solid var(--border);
       /* 실제 면색은 renderColumn에서 폴더 색으로 덮어씀 */
       border-radius: var(--radius);
       display: flex;
       flex-direction: column;
-      max-height: calc(100vh - 140px);
     }
 
     .column-header {
@@ -322,10 +322,13 @@
     }
 
     .column-body {
-      flex: 1;
-      overflow-y: auto;
-      padding: 8px;
+      flex: 0 0 auto;
+      position: relative;
+      display: grid;
+      gap: 0;
+      padding: 10px;
       min-height: 120px;
+      align-content: start;
     }
 
     .column-body.drag-over {
@@ -334,70 +337,22 @@
       background: rgba(35, 131, 226, 0.04);
     }
 
-    .add-zone {
-      padding: 8px;
-      border-top: 1px solid var(--border);
+    .column-folder-shape {
+      pointer-events: none;
+      position: absolute;
+      inset: 0;
+      z-index: 0;
     }
 
-    .add-trigger {
-      width: 100%;
-      text-align: left;
-      padding: 8px 10px;
-      border: 1px dashed var(--border);
-      border-radius: var(--radius);
-      background: transparent;
-      color: var(--muted);
-      font-family: inherit;
-      font-size: 13px;
-      cursor: pointer;
+    .column-folder-blob {
+      position: absolute;
+      background: var(--folder-fill, rgba(155, 154, 151, 0.18));
+      border-radius: 16px;
     }
 
-    .add-trigger:hover {
-      background: rgba(0, 0, 0, 0.03);
-      color: var(--text);
-    }
-
-    .composer {
-      display: none;
-      flex-direction: column;
-      gap: 8px;
-      padding: 10px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      background: var(--bg);
-    }
-
-    .composer.open {
-      display: flex;
-    }
-
-    .composer input[type="text"],
-    .composer input[type="date"] {
-      width: 100%;
-      padding: 8px 10px;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      font-family: inherit;
-      font-size: 13px;
-    }
-
-    .composer label {
-      font-size: 11px;
-      color: var(--muted);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 4px;
-    }
-
-    .composer input[type="range"] {
-      width: 100%;
-    }
-
-    .composer-actions {
-      display: flex;
-      gap: 8px;
-      justify-content: flex-end;
+    .column-empty-add {
+      justify-self: start;
+      margin: 6px;
     }
 
     .card {
@@ -405,10 +360,13 @@
       border: 1px solid var(--border);
       border-radius: var(--radius);
       padding: 8px 10px;
-      margin-bottom: 8px;
+      margin: 8px;
       cursor: grab;
       box-shadow: 0 1px 2px var(--shadow);
       position: relative;
+      width: 240px;
+      min-height: 96px;
+      z-index: 1;
     }
 
     .card:active {
@@ -501,6 +459,54 @@
 
     .card-menu-item--danger:hover {
       background: #fef2f2;
+    }
+
+    .card-edge-btn {
+      position: absolute;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      opacity: 1;
+      transition: background-color 0.12s ease;
+      z-index: 2;
+    }
+
+    .card-edge-btn:hover,
+    .card-edge-btn:focus-visible {
+      background: rgba(35, 131, 226, 0.34);
+      outline: none;
+    }
+
+    .card-edge-btn-top,
+    .card-edge-btn-bottom {
+      left: 24px;
+      right: 24px;
+      height: 8px;
+      border-radius: 6px;
+    }
+
+    .card-edge-btn-left,
+    .card-edge-btn-right {
+      top: 18px;
+      bottom: 18px;
+      width: 8px;
+      border-radius: 6px;
+    }
+
+    .card-edge-btn-top {
+      top: -5px;
+    }
+
+    .card-edge-btn-bottom {
+      bottom: -5px;
+    }
+
+    .card-edge-btn-left {
+      left: -5px;
+    }
+
+    .card-edge-btn-right {
+      right: -5px;
     }
 
     .card-meta {
@@ -1753,6 +1759,9 @@
 
   var SCORE_MIN = -5;
   var SCORE_MAX = 5;
+  var CARD_GRID_CELL_WIDTH = 256;
+  var CARD_GRID_CELL_HEIGHT = 136;
+  var FOLDER_SHELL_GAP = 10;
 
   var state = {
     columns: [],
@@ -2194,6 +2203,8 @@
       if (c.urgencyAuto === undefined) c.urgencyAuto = true;
       c.urgency = roundScore1(c.urgency);
       c.importance = roundScore1(c.importance);
+      if (!Number.isFinite(c.gridX)) c.gridX = null;
+      if (!Number.isFinite(c.gridY)) c.gridY = null;
     });
   }
 
@@ -2299,9 +2310,116 @@
 
   /** 폴더 색 = 카드 목록을 감싸는 .column 패널 전체 면 (알파로 실제 투명도 적용) */
   function applyColumnPanelBackground(columnEl, col) {
-    var folderHex = getColumnFolderHex(col.id);
-    var fA = clamp01(userColors.folderAlpha);
-    columnEl.style.background = hexToRgba(folderHex, fA);
+    columnEl.style.background = "transparent";
+  }
+
+  function createCardAt(col, gridX, gridY, title) {
+    var id = "card-" + state.nextCardId++;
+    var card = {
+      id: id,
+      title: title || "새 카드",
+      deadline: null,
+      urgency: -5,
+      urgencyAuto: true,
+      importance: 0,
+      columnId: col.id,
+      gridX: gridX,
+      gridY: gridY
+    };
+    state.cards[id] = card;
+    col.cardIds.push(id);
+    return card;
+  }
+
+  function buildColumnGridData(col) {
+    var cards = [];
+    var occupied = {};
+    var minX = Infinity;
+    var maxX = -Infinity;
+    var minY = Infinity;
+    var maxY = -Infinity;
+
+    col.cardIds.forEach(function (cid, index) {
+      var c = getCard(cid);
+      if (!c) return;
+      if (!Number.isFinite(c.gridX)) c.gridX = 0;
+      if (!Number.isFinite(c.gridY)) c.gridY = index;
+      var key = c.gridX + "," + c.gridY;
+      if (occupied[key]) {
+        c.gridX = 0;
+        c.gridY = index;
+        key = c.gridX + "," + c.gridY;
+      }
+      occupied[key] = true;
+      cards.push(c);
+      minX = Math.min(minX, c.gridX);
+      maxX = Math.max(maxX, c.gridX);
+      minY = Math.min(minY, c.gridY);
+      maxY = Math.max(maxY, c.gridY);
+    });
+
+    if (!cards.length) {
+      minX = 0;
+      maxX = 0;
+      minY = 0;
+      maxY = 0;
+    }
+
+    cards.sort(function (a, b) {
+      if (a.gridY === b.gridY) return a.gridX - b.gridX;
+      return a.gridY - b.gridY;
+    });
+
+    return {
+      cards: cards,
+      occupied: occupied,
+      minX: minX,
+      maxX: maxX,
+      minY: minY,
+      maxY: maxY
+    };
+  }
+
+  function directionDelta(dir) {
+    if (dir === "left") return { x: -1, y: 0 };
+    if (dir === "right") return { x: 1, y: 0 };
+    if (dir === "top") return { x: 0, y: -1 };
+    return { x: 0, y: 1 };
+  }
+
+  function addCardAdjacent(baseCardId, dir) {
+    var baseCard = getCard(baseCardId);
+    if (!baseCard) return;
+    var col = getColumnById(baseCard.columnId);
+    if (!col) return;
+    var d = directionDelta(dir);
+    var grid = buildColumnGridData(col);
+    var nx = baseCard.gridX + d.x;
+    var ny = baseCard.gridY + d.y;
+    while (grid.occupied[nx + "," + ny]) {
+      nx += d.x;
+      ny += d.y;
+    }
+    createCardAt(col, nx, ny, "새 카드");
+    saveState();
+    renderBoard();
+    renderMatrix();
+  }
+
+  function renderFolderShell(body, cardElements) {
+    if (!cardElements.length) return;
+    var shell = document.createElement("div");
+    shell.className = "column-folder-shape";
+    cardElements.forEach(function (cardEl) {
+      var blob = document.createElement("div");
+      blob.className = "column-folder-blob";
+      blob.style.left = cardEl.offsetLeft - FOLDER_SHELL_GAP + "px";
+      blob.style.top = cardEl.offsetTop - FOLDER_SHELL_GAP + "px";
+      blob.style.width = cardEl.offsetWidth + FOLDER_SHELL_GAP * 2 + "px";
+      blob.style.height = cardEl.offsetHeight + FOLDER_SHELL_GAP * 2 + "px";
+      shell.appendChild(blob);
+    });
+    body.insertBefore(shell, body.firstChild);
   }
 
   function loadState() {
@@ -2588,6 +2706,7 @@
     var el = document.createElement("div");
     el.className = "column";
     el.dataset.columnId = col.id;
+    var body = null;
 
     var head = document.createElement("div");
     head.className = "column-header";
@@ -2610,16 +2729,32 @@
     var colorInp = document.createElement("input");
     colorInp.type = "color";
     colorInp.setAttribute("aria-label", "폴더 색");
-    colorInp.value = getColumnFolderHex(col.id);
-    swatch.style.backgroundColor = getColumnFolderHex(col.id);
+    var committedColor = getColumnFolderHex(col.id);
+    var previewColor = committedColor;
+    colorInp.value = committedColor;
+    swatch.style.backgroundColor = committedColor;
+    function applyFolderColorPreview(hex) {
+      swatch.style.backgroundColor = hex;
+      if (body) body.style.setProperty("--folder-fill", hexToRgba(hex, clamp01(userColors.folderAlpha)));
+    }
     colorInp.addEventListener("input", function () {
-      col.columnColor = colorInp.value;
-      swatch.style.backgroundColor = col.columnColor;
-      applyColumnHeaderStyle(head);
-      applyColumnPanelBackground(el, col);
+      previewColor = colorInp.value;
+      applyFolderColorPreview(previewColor);
+    });
+    colorInp.addEventListener("change", function () {
+      previewColor = colorInp.value;
+      committedColor = previewColor;
+      col.columnColor = committedColor;
+      applyFolderColorPreview(committedColor);
       saveState();
-      renderBoard();
       renderMatrix();
+    });
+    colorInp.addEventListener("blur", function () {
+      if (previewColor !== committedColor) {
+        previewColor = committedColor;
+        colorInp.value = committedColor;
+        applyFolderColorPreview(committedColor);
+      }
     });
     colorWrap.appendChild(swatch);
     colorWrap.appendChild(colorInp);
@@ -2629,134 +2764,46 @@
 
     el.appendChild(head);
 
-    var body = document.createElement("div");
+    body = document.createElement("div");
     body.className = "column-body";
     body.dataset.dropColumn = col.id;
+    body.style.setProperty("--folder-fill", getColumnFolderRgba(col.id));
 
-    col.cardIds.forEach(function (cid) {
-      var c = getCard(cid);
-      if (c) body.appendChild(renderCard(c));
-    });
+    var grid = buildColumnGridData(col);
+    var gridWidth = Math.max(1, grid.maxX - grid.minX + 1);
+    var gridHeight = Math.max(1, grid.maxY - grid.minY + 1);
+    body.style.gridTemplateColumns = "repeat(" + gridWidth + ", " + CARD_GRID_CELL_WIDTH + "px)";
+    body.style.gridTemplateRows = "repeat(" + gridHeight + ", " + CARD_GRID_CELL_HEIGHT + "px)";
+
+    if (grid.cards.length) {
+      var cardElements = [];
+      grid.cards.forEach(function (c) {
+        var cardEl = renderCard(c);
+        cardEl.style.gridColumn = String(c.gridX - grid.minX + 1);
+        cardEl.style.gridRow = String(c.gridY - grid.minY + 1);
+        body.appendChild(cardEl);
+        cardElements.push(cardEl);
+      });
+      renderFolderShell(body, cardElements);
+    } else {
+      var emptyAdd = document.createElement("button");
+      emptyAdd.type = "button";
+      emptyAdd.className = "btn column-empty-add";
+      emptyAdd.textContent = "첫 카드 만들기";
+      emptyAdd.addEventListener("click", function () {
+        createCardAt(col, 0, 0, "새 카드");
+        saveState();
+        renderBoard();
+        renderMatrix();
+      });
+      body.appendChild(emptyAdd);
+    }
 
     body.addEventListener("dragover", onColumnDragOver);
     body.addEventListener("dragleave", onColumnDragLeave);
     body.addEventListener("drop", onDropInColumn);
 
     el.appendChild(body);
-
-    var addZone = document.createElement("div");
-    addZone.className = "add-zone";
-    var trigger = document.createElement("button");
-    trigger.type = "button";
-    trigger.className = "add-trigger";
-    trigger.textContent = "+ 카드 추가";
-    var composer = document.createElement("div");
-    composer.className = "composer";
-    composer.innerHTML =
-      '<input type="text" class="composer-title" placeholder="제목 (필수)" />' +
-      '<input type="date" class="composer-deadline" />' +
-      '<p class="field-hint composer-urgency-hint" hidden></p>' +
-      '<label class="composer-auto-row auto-row">' +
-      '<input type="checkbox" class="composer-urgency-auto" checked />' +
-      "<span>자동</span></label>" +
-      '<div class="composer-urgency-block"><label>긴급도 (−5 ~ +5) <span class="cv-u">-5.0</span></label>' +
-      '<input type="range" class="composer-u" min="-5" max="5" step="0.1" value="-5" /></div>' +
-      '<div><label>중요도 (−5 ~ +5) <span class="cv-i">0.0</span></label>' +
-      '<input type="range" class="composer-i" min="-5" max="5" step="0.1" value="0" /></div>' +
-      '<div class="composer-actions">' +
-      '<button type="button" class="btn composer-cancel">취소</button>' +
-      '<button type="button" class="btn composer-add">추가</button></div>';
-
-    var titleEl = composer.querySelector(".composer-title");
-    var deadlineEl = composer.querySelector(".composer-deadline");
-    var autoCh = composer.querySelector(".composer-urgency-auto");
-    var uEl = composer.querySelector(".composer-u");
-    var iEl = composer.querySelector(".composer-i");
-    var cvU = composer.querySelector(".cv-u");
-    var cvI = composer.querySelector(".cv-i");
-    var urgencyHint = composer.querySelector(".composer-urgency-hint");
-
-    function updateComposerUrgencyMode() {
-      var dl = deadlineEl.value;
-      if (autoCh.checked) {
-        var au = roundScore1(computeAutoUrgency(dl || null));
-        uEl.value = String(au);
-        cvU.textContent = formatScore1(au);
-        uEl.disabled = true;
-        urgencyHint.textContent = dl
-          ? "마감일이 바뀌면 긴급도가 다시 계산됩니다."
-          : "마감일이 없으면 긴급도 −5로 맞춥니다.";
-        urgencyHint.hidden = false;
-      } else {
-        uEl.disabled = false;
-        urgencyHint.hidden = true;
-      }
-    }
-
-    uEl.addEventListener("input", function () {
-      cvU.textContent = formatScore1(uEl.value);
-    });
-    iEl.addEventListener("input", function () {
-      cvI.textContent = formatScore1(iEl.value);
-    });
-    deadlineEl.addEventListener("input", updateComposerUrgencyMode);
-    deadlineEl.addEventListener("change", updateComposerUrgencyMode);
-    deadlineEl.addEventListener("blur", updateComposerUrgencyMode);
-    autoCh.addEventListener("change", updateComposerUrgencyMode);
-
-    function openComposer() {
-      composer.classList.add("open");
-      trigger.style.display = "none";
-      updateComposerUrgencyMode();
-      titleEl.focus();
-    }
-
-    function closeComposer() {
-      composer.classList.remove("open");
-      trigger.style.display = "block";
-      titleEl.value = "";
-      deadlineEl.value = "";
-      autoCh.checked = true;
-      iEl.value = "0";
-      cvI.textContent = "0.0";
-      uEl.value = "-5";
-      cvU.textContent = "-5.0";
-      updateComposerUrgencyMode();
-    }
-
-    trigger.addEventListener("click", openComposer);
-    composer.querySelector(".composer-cancel").addEventListener("click", closeComposer);
-    composer.querySelector(".composer-add").addEventListener("click", function () {
-      var t = titleEl.value.trim();
-      if (!t) {
-        titleEl.focus();
-        return;
-      }
-      var id = "card-" + state.nextCardId++;
-      var dl = deadlineEl.value || null;
-      var urg = autoCh.checked
-        ? roundScore1(computeAutoUrgency(dl || null))
-        : roundScore1(uEl.value);
-      var card = {
-        id: id,
-        title: t,
-        deadline: dl,
-        urgency: urg,
-        urgencyAuto: autoCh.checked,
-        importance: roundScore1(iEl.value),
-        columnId: col.id
-      };
-      state.cards[id] = card;
-      col.cardIds.push(id);
-      saveState();
-      closeComposer();
-      renderBoard();
-      renderMatrix();
-    });
-
-    addZone.appendChild(trigger);
-    addZone.appendChild(composer);
-    el.appendChild(addZone);
 
     applyColumnPanelBackground(el, col);
 
@@ -2867,6 +2914,29 @@
       formatScore1(card.importance);
     meta.appendChild(pill);
     el.appendChild(meta);
+
+    var sides = [
+      { dir: "top", label: "위쪽에 카드 추가" },
+      { dir: "right", label: "오른쪽에 카드 추가" },
+      { dir: "bottom", label: "아래쪽에 카드 추가" },
+      { dir: "left", label: "왼쪽에 카드 추가" }
+    ];
+    sides.forEach(function (side) {
+      var edge = document.createElement("button");
+      edge.type = "button";
+      edge.className = "card-edge-btn card-edge-btn-" + side.dir;
+      edge.setAttribute("aria-label", side.label);
+      edge.draggable = false;
+      edge.addEventListener("mousedown", function (e) {
+        e.preventDefault();
+      });
+      edge.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        addCardAdjacent(card.id, side.dir);
+      });
+      el.appendChild(edge);
+    });
 
     return el;
   }
