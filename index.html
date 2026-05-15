@@ -220,6 +220,240 @@
       display: block;
     }
 
+    /* Today */
+    .today-dashboard {
+      display: grid;
+      gap: 16px;
+    }
+
+    .today-hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 380px);
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .today-hero-card,
+    .today-panel,
+    .today-stat-card {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.78);
+      box-shadow: 0 1px 2px var(--shadow);
+    }
+
+    .today-hero-card {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 220px;
+    }
+
+    .today-eyebrow {
+      margin: 0 0 10px;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .today-hero h1 {
+      margin: 0;
+      font-size: clamp(28px, 5vw, 48px);
+      line-height: 1.08;
+      letter-spacing: -0.06em;
+    }
+
+    .today-hero-desc {
+      max-width: 620px;
+      margin: 16px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .today-date {
+      margin-top: 24px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .today-quick-add {
+      padding: 18px;
+    }
+
+    .today-quick-add h2,
+    .today-panel h2 {
+      margin: 0 0 12px;
+      font-size: 15px;
+    }
+
+    .today-quick-form {
+      display: grid;
+      gap: 10px;
+    }
+
+    .today-quick-form label {
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .today-quick-form input,
+    .today-quick-form select {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg);
+      color: var(--text);
+      font: inherit;
+      padding: 9px 10px;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    .btn-primary:hover {
+      background: #1d70c9;
+      border-color: #1d70c9;
+    }
+
+    .today-stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .today-stat-card {
+      padding: 14px;
+    }
+
+    .today-stat-label {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+
+    .today-stat-value {
+      display: block;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+    }
+
+    .today-sections {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .today-panel {
+      padding: 16px;
+      min-width: 0;
+    }
+
+    .today-panel-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .today-panel-hint {
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .today-task-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .today-task {
+      width: 100%;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--card-bg);
+      color: var(--text);
+      font: inherit;
+      padding: 12px;
+      cursor: pointer;
+    }
+
+    .today-task:hover {
+      border-color: var(--accent);
+      box-shadow: 0 3px 12px var(--shadow);
+    }
+
+    .today-task-main {
+      min-width: 0;
+    }
+
+    .today-task-title {
+      display: block;
+      font-weight: 600;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .today-task-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .today-task-score {
+      flex-shrink: 0;
+      border-radius: 999px;
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 12px;
+      padding: 4px 8px;
+    }
+
+    .today-empty {
+      border: 1px dashed var(--border);
+      border-radius: 10px;
+      color: var(--muted);
+      padding: 18px;
+      text-align: center;
+    }
+
+    @media (max-width: 900px) {
+      .today-hero,
+      .today-sections {
+        grid-template-columns: 1fr;
+      }
+
+      .today-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 560px) {
+      .today-stats {
+        grid-template-columns: 1fr;
+      }
+    }
+
     /* Board */
     .board-toolbar {
       margin-bottom: 12px;
@@ -1439,14 +1673,92 @@
       </button>
     </div>
     <nav class="tabs" role="tablist">
-      <button type="button" id="tab-board" class="active" role="tab" aria-selected="true">보드 뷰</button>
+      <button type="button" id="tab-today" class="active" role="tab" aria-selected="true">오늘</button>
+      <button type="button" id="tab-board" role="tab" aria-selected="false">보드 뷰</button>
       <button type="button" id="tab-matrix" role="tab" aria-selected="false">매트릭스 뷰</button>
     </nav>
     <button type="button" class="btn-app-settings" id="btn-app-settings-open" title="설정" aria-label="앱 설정">⚙️</button>
   </header>
 
   <main>
-    <section id="view-board" class="view active" aria-labelledby="tab-board">
+    <section id="view-today" class="view active" aria-labelledby="tab-today">
+      <div class="today-dashboard">
+        <div class="today-hero">
+          <section class="today-hero-card" aria-labelledby="today-title">
+            <div>
+              <p class="today-eyebrow">Today planner</p>
+              <h1 id="today-title">오늘 해야 할 일을 한 화면에서 정리하세요.</h1>
+              <p class="today-hero-desc">
+                빠르게 할 일을 추가하고, 마감과 중요도를 기준으로 우선순위를 확인한 뒤 보드나 매트릭스에서 세부 배치를 조정할 수 있습니다.
+              </p>
+            </div>
+            <div class="today-date" id="today-date-label"></div>
+          </section>
+
+          <section class="today-quick-add" aria-labelledby="today-quick-add-title">
+            <h2 id="today-quick-add-title">빠른 추가</h2>
+            <form class="today-quick-form" id="today-quick-form">
+              <label>
+                할 일
+                <input type="text" id="today-quick-title" placeholder="예: 앱 첫 화면 다듬기" autocomplete="off" />
+              </label>
+              <label>
+                마감일
+                <input type="date" id="today-quick-deadline" />
+              </label>
+              <label>
+                중요도
+                <select id="today-quick-importance">
+                  <option value="5">높음 (+5)</option>
+                  <option value="3" selected>보통 (+3)</option>
+                  <option value="0">낮음 (0)</option>
+                </select>
+              </label>
+              <button type="submit" class="btn btn-primary">할 일 추가</button>
+            </form>
+          </section>
+        </div>
+
+        <section class="today-stats" aria-label="오늘 요약">
+          <div class="today-stat-card">
+            <span class="today-stat-label">전체 할 일</span>
+            <strong class="today-stat-value" id="today-stat-total">0</strong>
+          </div>
+          <div class="today-stat-card">
+            <span class="today-stat-label">오늘 마감</span>
+            <strong class="today-stat-value" id="today-stat-due-today">0</strong>
+          </div>
+          <div class="today-stat-card">
+            <span class="today-stat-label">지연</span>
+            <strong class="today-stat-value" id="today-stat-overdue">0</strong>
+          </div>
+          <div class="today-stat-card">
+            <span class="today-stat-label">집중 후보</span>
+            <strong class="today-stat-value" id="today-stat-focus">0</strong>
+          </div>
+        </section>
+
+        <div class="today-sections">
+          <section class="today-panel" aria-labelledby="today-focus-title">
+            <div class="today-panel-head">
+              <h2 id="today-focus-title">오늘 집중할 일</h2>
+              <span class="today-panel-hint">긴급도 + 중요도 순</span>
+            </div>
+            <div class="today-task-list" id="today-focus-list"></div>
+          </section>
+
+          <section class="today-panel" aria-labelledby="today-upcoming-title">
+            <div class="today-panel-head">
+              <h2 id="today-upcoming-title">다가오는 마감</h2>
+              <span class="today-panel-hint">7일 이내</span>
+            </div>
+            <div class="today-task-list" id="today-upcoming-list"></div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-board" class="view" aria-labelledby="tab-board" hidden>
       <div class="board-toolbar">
         <button type="button" class="btn" id="btn-add-column">+ 폴더 추가</button>
       </div>
@@ -2046,8 +2358,7 @@
     }
 
     syncAppSettingsUI();
-    renderBoard();
-    renderMatrix();
+    renderWorkspace();
   }
 
   function initAppSettingsPanel() {
@@ -2058,8 +2369,7 @@
         userColors[key] = el.value;
         saveUserColors();
         applyUserColors();
-        renderBoard();
-        renderMatrix();
+        renderWorkspace();
       });
     }
     bindUserColor("user-color-page-bg", "pageBg");
@@ -2079,8 +2389,7 @@
         if (v) v.textContent = pct + "%";
         saveUserColors();
         applyUserColors();
-        renderBoard();
-        renderMatrix();
+        renderWorkspace();
       });
     }
     bindOpacityRange("user-opacity-page-bg", "user-opacity-page-bg-val", "pageBgAlpha");
@@ -2402,8 +2711,7 @@
     }
     createCardAt(col, nx, ny, "새 카드");
     saveState();
-    renderBoard();
-    renderMatrix();
+    renderWorkspace();
   }
 
   function renderFolderShell(body, cardElements) {
@@ -2433,11 +2741,13 @@
         if (!data.columns) {
           state = defaultState();
         } else {
-          state.columns = data.columns;
+          state.columns = Array.isArray(data.columns) && data.columns.length ? data.columns : defaultState().columns;
           migrateColumns(state.columns);
+          state.cards = data.cards || {};
+          migrateCards(state.cards);
           state.nextColumnId = data.nextColumnId || 1;
           state.nextCardId = data.nextCardId || 1;
-          localCardMeta = data.cards || {};
+          localCardMeta = state.cards;
         }
       }
     } catch (e) {
@@ -2445,10 +2755,6 @@
     }
 
     if (!supabaseClient) {
-      state.cards = {};
-      state.columns.forEach(function (col) {
-        col.cardIds = [];
-      });
       return Promise.resolve();
     }
 
@@ -2462,20 +2768,24 @@
           return;
         }
         var rows = Array.isArray(res.data) ? res.data : [];
-        var cards = {};
+        var cards = Object.assign({}, state.cards);
         rows.forEach(function (row) {
           var id = String(row.id || "").trim();
           if (!id) return;
+          var local = localCardMeta[id] || {};
           cards[id] = {
             id: id,
             title: row.title || "",
             deadline: isoToDateInput(row.deadline),
             urgency: roundScore1(row.urgency),
-            urgencyAuto: false,
+            urgencyAuto: Object.prototype.hasOwnProperty.call(local, "urgencyAuto") ? local.urgencyAuto !== false : false,
             importance: roundScore1(row.importance),
-            columnId: (localCardMeta[id] && localCardMeta[id].columnId) || state.columns[0].id
+            columnId: local.columnId || state.columns[0].id,
+            gridX: Number.isFinite(local.gridX) ? local.gridX : 0,
+            gridY: Number.isFinite(local.gridY) ? local.gridY : 0
           };
         });
+        migrateCards(cards);
         state.cards = cards;
 
         var allIds = Object.keys(cards);
@@ -2613,8 +2923,7 @@
       .catch(function (err) {
         supabaseClient = null;
         window.supabaseClient = null;
-        console.error("[Supabase] init failed:", err && err.message ? err.message : err);
-        alert("Supabase 연결에 실패했습니다. URL/KEY 값 및 테이블/RLS 설정을 확인해 주세요.");
+        console.warn("[Supabase] init failed; local mode enabled:", err && err.message ? err.message : err);
         return false;
       });
   }
@@ -2691,6 +3000,197 @@
 
   function refreshUrgencyAndPersist() {
     if (syncAllUrgency()) saveState();
+  }
+
+  function todayNoon() {
+    var d = new Date();
+    d.setHours(12, 0, 0, 0);
+    return d;
+  }
+
+  function deadlineDiffDays(deadlineStr) {
+    if (!deadlineStr) return null;
+    var d = new Date(deadlineStr + "T12:00:00");
+    if (isNaN(d.getTime())) return null;
+    return Math.round((d - todayNoon()) / 86400000);
+  }
+
+  function getAllCards() {
+    return Object.keys(state.cards)
+      .map(function (id) {
+        return state.cards[id];
+      })
+      .filter(Boolean);
+  }
+
+  function getColumnName(columnId) {
+    var col = getColumnById(columnId);
+    return col ? col.name : "분류 없음";
+  }
+
+  function taskPriorityScore(card) {
+    return roundScore1(card.importance * 1.6 + card.urgency);
+  }
+
+  function compareFocusCards(a, b) {
+    var scoreDiff = taskPriorityScore(b) - taskPriorityScore(a);
+    if (Math.abs(scoreDiff) > 0.001) return scoreDiff;
+    var aDays = deadlineDiffDays(a.deadline);
+    var bDays = deadlineDiffDays(b.deadline);
+    if (aDays === null) aDays = 9999;
+    if (bDays === null) bDays = 9999;
+    if (aDays !== bDays) return aDays - bDays;
+    return String(a.title).localeCompare(String(b.title), "ko");
+  }
+
+  function setText(id, text) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = text;
+  }
+
+  function renderTodayTask(card) {
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "today-task";
+    btn.addEventListener("click", function () {
+      openEditModal(card.id);
+    });
+
+    var main = document.createElement("span");
+    main.className = "today-task-main";
+
+    var title = document.createElement("span");
+    title.className = "today-task-title";
+    title.textContent = card.title;
+    main.appendChild(title);
+
+    var meta = document.createElement("span");
+    meta.className = "today-task-meta";
+    var folder = document.createElement("span");
+    folder.textContent = getColumnName(card.columnId);
+    meta.appendChild(folder);
+    var dd = dDayLabel(card.deadline);
+    if (dd) {
+      var due = document.createElement("span");
+      due.textContent = dd;
+      meta.appendChild(due);
+    }
+    var scores = document.createElement("span");
+    scores.textContent = "긴급 " + formatScore1(card.urgency) + " · 중요 " + formatScore1(card.importance);
+    meta.appendChild(scores);
+    main.appendChild(meta);
+
+    var score = document.createElement("span");
+    score.className = "today-task-score";
+    score.textContent = "우선 " + formatScore1(taskPriorityScore(card));
+
+    btn.appendChild(main);
+    btn.appendChild(score);
+    return btn;
+  }
+
+  function renderTodayList(containerId, cards, emptyText) {
+    var container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = "";
+    if (!cards.length) {
+      var empty = document.createElement("div");
+      empty.className = "today-empty";
+      empty.textContent = emptyText;
+      container.appendChild(empty);
+      return;
+    }
+    cards.forEach(function (card) {
+      container.appendChild(renderTodayTask(card));
+    });
+  }
+
+  function renderTodayDashboard() {
+    refreshUrgencyAndPersist();
+    setText(
+      "today-date-label",
+      todayNoon().toLocaleDateString("ko-KR", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        weekday: "long"
+      })
+    );
+
+    var cards = getAllCards();
+    var overdue = 0;
+    var dueToday = 0;
+    var focusCount = 0;
+    cards.forEach(function (card) {
+      var diff = deadlineDiffDays(card.deadline);
+      if (diff !== null && diff < 0) overdue++;
+      if (diff === 0) dueToday++;
+      if (card.urgency >= 0 && card.importance >= 0) focusCount++;
+    });
+
+    setText("today-stat-total", String(cards.length));
+    setText("today-stat-due-today", String(dueToday));
+    setText("today-stat-overdue", String(overdue));
+    setText("today-stat-focus", String(focusCount));
+
+    var focusCards = cards
+      .slice()
+      .sort(compareFocusCards)
+      .slice(0, 6);
+    var upcomingCards = cards
+      .filter(function (card) {
+        var diff = deadlineDiffDays(card.deadline);
+        return diff !== null && diff <= 7;
+      })
+      .sort(function (a, b) {
+        var aDays = deadlineDiffDays(a.deadline);
+        var bDays = deadlineDiffDays(b.deadline);
+        if (aDays !== bDays) return aDays - bDays;
+        return compareFocusCards(a, b);
+      })
+      .slice(0, 6);
+
+    renderTodayList("today-focus-list", focusCards, "아직 할 일이 없습니다. 빠른 추가로 첫 할 일을 만들어 보세요.");
+    renderTodayList("today-upcoming-list", upcomingCards, "7일 안에 마감되는 할 일이 없습니다.");
+  }
+
+  function ensurePrimaryColumn() {
+    if (!state.columns.length) {
+      state = defaultState();
+    }
+    return state.columns[0];
+  }
+
+  function nextGridYForColumn(col) {
+    var grid = buildColumnGridData(col);
+    return grid.cards.length ? grid.maxY + 1 : 0;
+  }
+
+  function initTodayDashboard() {
+    var form = document.getElementById("today-quick-form");
+    if (!form) return;
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var titleInput = document.getElementById("today-quick-title");
+      var deadlineInput = document.getElementById("today-quick-deadline");
+      var importanceInput = document.getElementById("today-quick-importance");
+      var title = titleInput.value.trim();
+      if (!title) {
+        titleInput.focus();
+        return;
+      }
+      var col = ensurePrimaryColumn();
+      var card = createCardAt(col, 0, nextGridYForColumn(col), title);
+      card.deadline = deadlineInput.value || null;
+      card.importance = roundScore1(importanceInput.value);
+      card.urgencyAuto = true;
+      card.urgency = roundScore1(computeAutoUrgency(card.deadline));
+      saveState();
+      form.reset();
+      importanceInput.value = "3";
+      renderWorkspace();
+      titleInput.focus();
+    });
   }
 
   function renderBoard() {
@@ -2793,8 +3293,7 @@
       emptyAdd.addEventListener("click", function () {
         createCardAt(col, 0, 0, "새 카드");
         saveState();
-        renderBoard();
-        renderMatrix();
+        renderWorkspace();
       });
       body.appendChild(emptyAdd);
     }
@@ -2950,8 +3449,7 @@
     });
     saveState();
     deleteTodoFromSupabase(cardId);
-    renderBoard();
-    renderMatrix();
+    renderWorkspace();
   }
 
   function onCardDragStart(e) {
@@ -3005,8 +3503,7 @@
       toCol.cardIds.push(cardId);
     }
     saveState();
-    renderBoard();
-    renderMatrix();
+    renderWorkspace();
   }
 
   function onDropInColumn(e) {
@@ -3159,6 +3656,12 @@
     });
   }
 
+  function renderWorkspace() {
+    renderTodayDashboard();
+    renderBoard();
+    renderMatrix();
+  }
+
   function escapeHtml(s) {
     var d = document.createElement("div");
     d.textContent = s;
@@ -3237,6 +3740,7 @@
       if (wasMoved) {
         saveState();
         renderBoard();
+        renderTodayDashboard();
         syncEditModalFromCard(cardId);
       }
       matrixDrag = null;
@@ -3329,8 +3833,7 @@
     card.importance = roundScore1(document.getElementById("edit-importance").value);
     saveState();
     closeEditModal();
-    renderBoard();
-    renderMatrix();
+    renderWorkspace();
   });
 
   document.getElementById("modal-cancel").addEventListener("click", closeEditModal);
@@ -3346,8 +3849,12 @@
     });
     saveState();
     renderBoard();
+    renderTodayDashboard();
   });
 
+  document.getElementById("tab-today").addEventListener("click", function () {
+    setView("today");
+  });
   document.getElementById("tab-board").addEventListener("click", function () {
     setView("board");
   });
@@ -3356,37 +3863,24 @@
   });
 
   function setView(name) {
-    var boardTab = document.getElementById("tab-board");
-    var matrixTab = document.getElementById("tab-matrix");
-    var boardView = document.getElementById("view-board");
-    var matrixView = document.getElementById("view-matrix");
-    if (name === "board") {
-      boardTab.classList.add("active");
-      matrixTab.classList.remove("active");
-      boardTab.setAttribute("aria-selected", "true");
-      matrixTab.setAttribute("aria-selected", "false");
-      boardView.classList.add("active");
-      boardView.removeAttribute("hidden");
-      matrixView.classList.remove("active");
-      matrixView.setAttribute("hidden", "");
-    } else {
-      matrixTab.classList.add("active");
-      boardTab.classList.remove("active");
-      matrixTab.setAttribute("aria-selected", "true");
-      boardTab.setAttribute("aria-selected", "false");
-      matrixView.classList.add("active");
-      matrixView.removeAttribute("hidden");
-      boardView.classList.remove("active");
-      boardView.setAttribute("hidden", "");
-      renderMatrix();
-    }
+    ["today", "board", "matrix"].forEach(function (viewName) {
+      var tab = document.getElementById("tab-" + viewName);
+      var view = document.getElementById("view-" + viewName);
+      var active = viewName === name;
+      tab.classList.toggle("active", active);
+      tab.setAttribute("aria-selected", active ? "true" : "false");
+      view.classList.toggle("active", active);
+      if (active) view.removeAttribute("hidden");
+      else view.setAttribute("hidden", "");
+    });
+    if (name === "today") renderTodayDashboard();
+    if (name === "matrix") renderMatrix();
   }
 
   document.addEventListener("visibilitychange", function () {
     if (document.visibilityState !== "visible") return;
     refreshUrgencyAndPersist();
-    renderBoard();
-    renderMatrix();
+    renderWorkspace();
   });
 
   function loadMatrixColorsFromStorage() {
@@ -3686,8 +4180,8 @@ document.getElementById("btn-app-refresh").addEventListener("click", function ()
   var supabaseReady = await initSupabaseClient();
   console.info("[App] Supabase ready:", !!supabaseReady);
   await loadState();
-  renderBoard();
-  renderMatrix();
+  initTodayDashboard();
+  renderWorkspace();
 })();
   </script>
 </body>
